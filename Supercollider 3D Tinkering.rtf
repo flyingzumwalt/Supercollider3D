@@ -1,0 +1,330 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1038\cocoasubrtf360
+{\fonttbl\f0\fnil\fcharset0 Monaco;\f1\fnil\fcharset0 Verdana;\f2\fswiss\fcharset0 Helvetica;
+}
+{\colortbl;\red255\green255\blue255;\red231\green232\blue241;\red0\green0\blue166;\red0\green0\blue161;
+\red38\green38\blue38;\red0\green0\blue186;\red170\green0\blue0;\red0\green0\blue177;\red127\green27\blue18;
+\red0\green0\blue0;\red25\green99\blue0;\red77\green77\blue77;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+
+\f0\fs18 \cf0 \
+// Configure Internal Server to use Jack\
+// Make sure to set up Jack to route iTunes (or other sources) into SuperCollider 1n1, in2, etc.\
+\pard\pardeftab720\sl320\ql\qnatural
+
+\f1\fs20 \cf0 \cb2 Server.internal.options.device_("JackRouter");\
+
+\f0\fs18 \cb1 Server.internal.boot;\
+
+\f1\fs20 \cb2 Server.local.options.device_("JackRouter");\
+
+\f0\fs18 \cb1 Server.local.boot;\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf0 \
+\
+\pard\pardeftab560\ql\qnatural
+\cf0 // Pan in a circle \
+// Period: 10 seconds\
+// Distance: 2 \
+\
+(\
+\
+// Radians for lfl, lfh, rfl, rfh, rrl, rrh, lrl, lrh \
+// Speakers set up in 3D but \cf3 BFDecode1 can only handle 2D B-format signals\cf0 \
+var azi = 	 [-0.25pi, -0.25pi, 0.25pi, 0.25pi, 0.75pi, 0.75pi, 1.25pi, 1.25pi];\
+var ele = [-0.12pi, 0.12pi, -0.12pi, 0.12pi,-0.12pi, 0.12pi,-0.12pi, 0.12pi];\
+\
+(\{ \
+	#w, x, y, z = \cf4 BFEncode2\cf0 .ar(
+\f1\fs24 \cf5 SoundIn.ar(0)
+\f0\fs18 \cf0 , \cf6 SinOsc\cf0 .kr(0.1, 0, 1.5), \cf6 SinOsc\cf0 .kr(0.1, pi*0.5, 1.5), 0, 1);\
+	//decode for channels specified by values of azi & ele\
+	\cf3 BFDecode1\cf0 .ar(w, x, y, z,
+\fs12  
+\fs18 azi, ele, 0);\
+\}.scope(4));\
+\
+)\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf0 \
+\
+\
+\pard\pardeftab560\ql\qnatural
+\cf7 //\
+// VBAP (3D)\
+//\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab560\ql\qnatural\pardirnatural
+\cf0 \
+\pard\pardeftab560\ql\qnatural
+\cf7 // Set up Seerver & Speaker Array\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab560\ql\qnatural\pardirnatural
+\cf0 (\
+\pard\pardeftab720\sl320\ql\qnatural
+
+\f1\fs20 \cf0 \cb2 Server.local.options.device_("JackRouter");\
+
+\f0\fs18 \cb1 Server.local.boot;\
+\
+\pard\pardeftab560\li1140\fi-1140\ql\qnatural
+\cf8 a = VBAPSpeakerArray\cf0 .new(3, [[-45, -45], [-45, 45],[45, -45],[45, 45],[135, -45], [135, 45], [-135, -45], [-135, 45], ]); \cf9 // zig zag partial dome\
+\pard\pardeftab560\ql\qnatural
+\cf0 b = \cf6 Buffer\cf0 .loadCollection(s, a.getSetsAndMatrices);\
+\pard\pardeftab560\li1140\fi-1140\ql\qnatural
+\cf0 )\
+\
+\pard\pardeftab560\ql\qnatural
+\cf0 \
+(\
+\pard\pardeftab560\ql\qnatural
+\cf7 // Simple DEMO\cf0 \
+\cf7 // pan around the circle \
+\pard\pardeftab560\ql\qnatural
+\cf0 	x = \{ \cf6 |azi = 0, ele = 0, spr = 0|\
+		var\cf0  source;\
+		\cf10 source\cf0  = 
+\fs20 \cf6 SoundIn\cf5 .ar(0);
+\fs24  
+\fs18 \cf7 // audio source 
+\fs24 \cf5 \
+		
+\fs18 \cf10 ele
+\fs24 \cf5  = 
+\fs18 0
+\fs22 ;
+\fs24  	
+\fs18 \cf7 // flat elevation
+\f1\fs24 \cf5 \
+		
+\f0\fs18 \cf10 azi
+\f1\fs24 \cf5  = 
+\f0\fs18 \cf6 LFSaw\cf0 .kr(0.1, 0).range(-180, 180) * -1;  \cf7 // Spin az in a circle\cf0 \
+	\
+		\cf6 VBAP\cf0 .ar(16, source, b.bufnum, \cf10 azi\cf0 , \cf10 ele\cf0 , spr);\
+	\}.play;\
+)\
+\
+\
+(\
+\pard\pardeftab560\ql\qnatural
+\cf7 // BEST DEMO\cf0 \
+\cf7 // pan around the circle, slider controls elevation\
+\pard\pardeftab560\ql\qnatural
+\cf0 	(\
+	\
+	\cf7 // set up slider to control elevation\
+	\cf0 	\cf7 // set up the bus\
+		\cf0 d = \cf6 Bus\cf0 .control(s);\
+		d.value = \cf6 1\cf0 ;\
+		\
+		w = \cf6 Window\cf0 .new.front;\
+		m = \cf6 ControlSpec\cf0 (-70, 70, \cf11 \\linear\cf0 , 0.01); \cf7 // min, max, mapping, step\
+		\cf0 c = \cf6 StaticText\cf0 (w, \cf6 Rect\cf0 (20, 20, 150, 20)).align_(\cf11 \\center\cf0 ).background_(\cf6 Color\cf0 .rand);\
+		e = \cf6 Slider\cf0 (w, \cf6 Rect\cf0 (200, 60, 20, 150))\
+			.focusColor_(\cf6 Color\cf0 .red(alpha:0.2))\
+			.background_(\cf6 Color\cf0 .rand)\
+			.value_(0.5)\
+			.action_(\{\
+				d.value = m.map(e.value);\
+				c.string_(m.map(e.value).asString);\
+\
+				\cf7 // round the float so it will fit in the NumberBox\
+		\cf0 		\});\
+		e.action.value;\
+	)\
+	\
+\pard\pardeftab560\ql\qnatural
+\cf7 \
+\pard\pardeftab560\ql\qnatural
+\cf0 	(\
+		\cf7 // Spin az in a circle, control el with d.kr\cf0 \
+		x = \{ \cf6 |azi = 0, ele = 0, spr = 0|\
+			var\cf0  source;\
+			source = 
+\fs20 \cf5 SoundIn.ar(0);
+\fs24  
+\fs18 \cf7 // audio source 
+\fs24 \cf5 \
+			
+\fs18 \cf6 ele
+\fs24 \cf5  = 
+\fs18 d.kr
+\fs22 ;
+\fs24  	
+\fs18 \cf7 //control el with d.kr
+\f1\fs24 \cf5 \
+			
+\f0\fs18 \cf6 azi
+\f1\fs24 \cf5  = 
+\f0\fs18 \cf6 LFSaw\cf0 .kr(0.1, 0).range(-180, 180) * -1;  \cf7 // Spin az in a circle\cf0 \
+		\
+			\cf6 VBAP\cf0 .ar(16, source, b.bufnum, \cf6 azi\cf0 , \cf6 ele\cf0 , spr);\
+		\}.play;\
+	)\
+)\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab560\ql\qnatural\pardirnatural
+\cf0 \
+\
+\pard\pardeftab560\ql\qnatural
+\cf0 (\
+	\cf7 // set up the bus\
+	\cf0 d = \cf6 Bus\cf0 .control(s);\
+	d.value = \cf6 60\cf0 ;\
+	\
+	e = Bus.control(s);\
+	e.value = 0;\
+\
+\
+	\cf7 // set up the knob\cf0 \
+\pard\pardeftab560\li1700\fi-1700\ql\qnatural
+\cf0 	w=\cf6 Window\cf0 .new(\cf12 "Azimuth"\cf0 , \cf6 Rect\cf0 (640,630,270,70)).front;\
+	\
+	k = \cf6 Knob\cf0 .new(w, \cf6 Rect\cf0 (20, 10, 48, 48));\
+	k.action_(\{\cf6 |v,x,y,m|\cf0  d.value = v.value*300-150; \});\
+	\
+\pard\pardeftab560\ql\qnatural
+\cf0 \
+\
+\pard\pardeftab560\ql\qnatural
+\cf7 	// pan around the circle up and down\
+\pard\pardeftab560\ql\qnatural
+\cf0 	x = \{ \cf6 |azi = 60, ele = 0, spr = 0|\
+		var\cf0  source;\
+		source = 
+\f1\fs24 \cf5 SoundIn.ar(0);\
+
+\f0\fs18 \cf6 		VBAP\cf0 .ar(9, source, b.bufnum, \cf6 d.kr\cf0 , 
+\fs24 MouseY.kr(70, -70)
+\fs18 , spr);\
+	\}.play;\
+\
+\pard\pardeftab560\li1700\fi-1700\ql\qnatural
+\cf0 \
+\pard\pardeftab560\ql\qnatural
+\cf0 )\
+\
+\
+\
+//\
+// Use  a Knob & kr Bus \
+//\
+\
+(\
+	s = \cf6 Server\cf0 .local;\
+	s.boot;\
+	\
+	\cf7 // set up the bus\
+	\cf0 d = \cf6 Bus\cf0 .control(s);\
+	d.value = \cf6 60\cf0 ;\
+	\
+	\cf7 // set up the knob\cf0 \
+\pard\pardeftab560\li1700\fi-1700\ql\qnatural
+\cf0 	w=\cf6 Window\cf0 .new(\cf12 "Azimuth"\cf0 , \cf6 Rect\cf0 (640,630,270,70)).front;\
+	k = \cf6 Knob\cf0 .new(w, \cf6 Rect\cf0 (20, 10, 48, 48));\
+	k.action_(\{\cf6 |v,x,y,m|\cf0  d.value = v.value*300-150; postf(\cf12 "action func called: %\\n"\cf0 , d.get); \});\
+\
+	\cf7 // set up the speakers\cf0 \
+\pard\pardeftab560\li1140\fi-1140\ql\qnatural
+\cf8 	a = VBAPSpeakerArray\cf0 .new(3, [[-45, -45], [-45, 45],[45, -45],[45, 45],[135, -45], [135, 45], [-135, -45], [-135, 45] ]); \
+\pard\pardeftab560\ql\qnatural
+\cf0 	b = \cf6 Buffer\cf0 .loadCollection(s, a.getSetsAndMatrices);\
+\
+\pard\pardeftab560\ql\qnatural
+\cf7 	// pan around the circle up and down\
+	\cf6 SynthDef\cf0 (\cf11 \\knob_Pan3d, \{ arg \cf6 azi = 60, ele = 0, spr = 0;\
+		var\cf0  source;\
+		source = 
+\f1\fs24 \cf5 SoundIn.ar(0);	\
+		
+\f0\fs18 \cf6 ele = 
+\fs24 \cf0 MouseY.kr(70, -70);\
+		
+\f1 \cf5 \
+\pard\pardeftab560\ql\qnatural
+
+\f0\fs18 \cf6 		VBAP\cf0 .ar(9, source, b.bufnum, azi, ele, spr);\
+	\}).send(s);\
+	\
+	x = \cf6 Synth\cf0 (\cf11 \\knob_Pan3d\cf0 );\
+	x.map(0, k);\cf11 \
+\cf0 	x.play;\
+\
+\pard\pardeftab560\li1700\fi-1700\ql\qnatural
+\cf0 \
+\pard\pardeftab560\ql\qnatural
+\cf0 )\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf0 \
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\pard\pardeftab560\ql\qnatural
+\cf0 //\
+// Ambisonic (2D)\
+//\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf0 \
+\pard\pardeftab560\ql\qnatural
+\cf0 (\{ \
+	#w, x, y, z = \cf4 BFEncode2\cf0 .ar(\cf4 WhiteNoise\cf0 .ar, MouseX.kr(-20, 20), MouseY.kr(20, -20), 0, 0.3);\
+	//decode for 4 channels\
+	\cf3 BFDecode1\cf0 .ar(w, x, y, z,
+\fs12  
+\fs18 [-0.25pi, 0.25pi, 0.75pi, 1.25pi], 0);\
+\}.scope(4));\
+\
+\
+// Play Audio Input Channel through BFEncoder\
+// control with mouse x,y positions\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf0 \
+\pard\pardeftab560\ql\qnatural
+\cf0 (\{ \
+	#w, x, y, z = \cf4 BFEncode2\cf0 .ar(\{
+\f1\fs24 \cf5 SoundIn.ar(0)
+\f0\fs18 \cf0 \}, MouseX.kr(-3, 3), MouseY.kr(3, -3), 0, 1);\
+	//decode for 4 channels\
+	\cf3 BFDecode1\cf0 .ar(w, x, y, z,
+\fs12  
+\fs18 [-0.25pi, 0.25pi, 0.75pi, 1.25pi], 0);\
+\}.scope(4));\
+\
+\
+\
+\
+\
+\
+\cf6 \{SinOsc\cf0 .ar(100, 0.5*pi, 3)\}.plot2\
+\
+//\
+// Ambisonic (3D)\
+//\
+\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf0 \
+Quarks.gui\
+\
+\pard\pardeftab560\ql\qnatural
+
+\f2\b\fs36 \cf0 ServerOptions
+\f0\b0\fs18 .inDevices\
+s.options.inDevice\
+\
+\
+
+\f2\fs24 s.options.numInputBusChannels\
+\
+s.boot\
+\pard\pardeftab720\sl320\ql\qnatural
+
+\f1 \cf5 \{SoundIn.ar(0)\}.scope(1, zoom:4);}
